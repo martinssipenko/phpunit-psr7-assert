@@ -15,6 +15,7 @@ use Helmich\Psr7Assert\Constraint\UrlEncodedMatchesMany;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\Constraint\IsEqual;
+use PHPUnit\Framework\Constraint\LogicalAnd;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -38,7 +39,7 @@ trait Psr7Assertions
         Assert::assertThat($message, static::hasHeaders($constraints));
     }
 
-    public static function assertMessageBodyMatches(MessageInterface $message, $constraint): void
+    public static function assertMessageBodyMatches(MessageInterface $message, Constraint $constraint): void
     {
         Assert::assertThat($message, static::bodyMatches($constraint));
     }
@@ -103,9 +104,6 @@ trait Psr7Assertions
         Assert::assertThat($request, static::isDelete());
     }
 
-    /**
-     * @param string $uri
-     */
     public static function assertStringIsAbsoluteUri(string $uri): void
     {
         Assert::assertThat($uri, static::isAbsoluteUri());
@@ -126,67 +124,75 @@ trait Psr7Assertions
         Assert::assertThat($uriOrRequest, static::hasQueryParameters($parameters));
     }
 
-    public static function hasUri(string $uri): Constraint
+    public static function hasUri(string $uri): HasUriConstraint
     {
         return new HasUriConstraint($uri);
     }
 
-    public static function hasMethod(string $method): Constraint
+    public static function hasMethod(string $method): HasMethodConstraint
     {
         return new HasMethodConstraint($method);
     }
 
-    public static function hasStatus($status): Constraint
+    public static function hasStatus($status): HasStatusConstraint
     {
         return new HasStatusConstraint($status);
     }
 
-    public static function isSuccess(): Constraint
+    public static function isSuccess(): HasStatusConstraint
     {
         return new HasStatusConstraint(Assert::logicalAnd(Assert::greaterThanOrEqual(200), Assert::lessThan(300)));
     }
 
-    public static function isRedirect(): Constraint
+    public static function isRedirect(): HasStatusConstraint
     {
         return new HasStatusConstraint(Assert::logicalAnd(Assert::greaterThanOrEqual(300), Assert::lessThan(400)));
     }
 
-    public static function isClientError(): Constraint
+    public static function isClientError(): HasStatusConstraint
     {
         return new HasStatusConstraint(Assert::logicalAnd(Assert::greaterThanOrEqual(400), Assert::lessThan(500)));
     }
 
-    public static function isServerError(): Constraint
+    public static function isServerError(): HasStatusConstraint
     {
         return new HasStatusConstraint(Assert::logicalAnd(Assert::greaterThanOrEqual(500), Assert::lessThan(600)));
     }
 
-    public static function isGet(): Constraint
+    public static function hasContentType(string $contentType): HasHeaderConstraint
+    {
+        return self::hasHeader(
+            'Content-Type',
+            Assert::matchesRegularExpression(',^' . preg_quote($contentType, '/') . '(;.+)?$,'),
+        );
+    }
+
+    public static function isGet(): HasMethodConstraint
     {
         return static::hasMethod('GET');
     }
 
-    public static function isPost(): Constraint
+    public static function isPost(): HasMethodConstraint
     {
         return static::hasMethod('POST');
     }
 
-    public static function isPut(): Constraint
+    public static function isPut(): HasMethodConstraint
     {
         return static::hasMethod('PUT');
     }
 
-    public static function isDelete(): Constraint
+    public static function isDelete(): HasMethodConstraint
     {
         return static::hasMethod('DELETE');
     }
 
-    public static function hasHeader(string $name, $constraint = null): Constraint
+    public static function hasHeader(string $name, $constraint = null): HasHeaderConstraint
     {
         return new HasHeaderConstraint($name, $constraint);
     }
 
-    public static function hasHeaders(array $constraints): Constraint
+    public static function hasHeaders(array $constraints): LogicalAnd
     {
         $headerConstraints = [];
         foreach ($constraints as $name => $constraint) {
@@ -196,12 +202,12 @@ trait Psr7Assertions
         return Assert::logicalAnd(...$headerConstraints);
     }
 
-    public static function hasHeaderEqualTo(string $name, string $expected): Constraint
+    public static function hasHeaderEqualTo(string $name, string $expected): HasHeaderConstraint
     {
         return new HasHeaderConstraint($name, new IsEqual($expected));
     }
 
-    public static function bodyMatches(Constraint $constraint): Constraint
+    public static function bodyMatches(Constraint $constraint): BodyMatchesConstraint
     {
         return new BodyMatchesConstraint($constraint);
     }
@@ -211,17 +217,17 @@ trait Psr7Assertions
      * @param string|Constraint|null $value
      * @return Constraint
      */
-    public static function hasQueryParameter($name, $value = null): Constraint
+    public static function hasQueryParameter($name, $value = null): HasQueryParameterConstraint
     {
         return new HasQueryParameterConstraint($name, $value);
     }
 
-    public static function hasQueryParameters(array $parameters): Constraint
+    public static function hasQueryParameters(array $parameters): HasQueryParametersConstraint
     {
         return new HasQueryParametersConstraint($parameters);
     }
 
-    public static function bodyMatchesJson(array $constraints): Constraint
+    public static function bodyMatchesJson(array $constraints): LogicalAnd
     {
         return Assert::logicalAnd(
             self::hasHeader('content-type', Assert::matchesRegularExpression(',^application/json(;.+)?$,')),
@@ -234,7 +240,7 @@ trait Psr7Assertions
         );
     }
 
-    public static function bodyMatchesForm(array $constraints): Constraint
+    public static function bodyMatchesForm(array $constraints): LogicalAnd
     {
         return Assert::logicalAnd(
             self::hasHeader('content-type', Assert::matchesRegularExpression(',^application/x-www-form-urlencoded(;.+)?$,')),
@@ -242,10 +248,7 @@ trait Psr7Assertions
         );
     }
 
-    /**
-     * @return Constraint
-     */
-    public static function isAbsoluteUri(): Constraint
+    public static function isAbsoluteUri(): IsAbsoluteUriConstraint
     {
         return new IsAbsoluteUriConstraint();
     }

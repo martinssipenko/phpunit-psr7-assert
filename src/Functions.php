@@ -1,122 +1,119 @@
 <?php
 declare(strict_types=1);
 
-use Helmich\JsonAssert\Constraint\JsonValueMatchesMany;
 use Helmich\Psr7Assert\Constraint\BodyMatchesConstraint;
 use Helmich\Psr7Assert\Constraint\HasHeaderConstraint;
+use Helmich\Psr7Assert\Constraint\HasMethodConstraint;
+use Helmich\Psr7Assert\Constraint\HasQueryParameterConstraint;
+use Helmich\Psr7Assert\Constraint\HasQueryParametersConstraint;
+use Helmich\Psr7Assert\Constraint\HasStatusConstraint;
 use Helmich\Psr7Assert\Constraint\HasUriConstraint;
 use Helmich\Psr7Assert\Constraint\IsAbsoluteUriConstraint;
 use Helmich\Psr7Assert\Psr7AssertionsClass;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Constraint\Constraint;
+use PHPUnit\Framework\Constraint\LogicalAnd;
 
 function hasUri(string $uri): HasUriConstraint
 {
-    return new HasUriConstraint($uri);
+    return Psr7AssertionsClass::hasUri($uri);
 }
 
 function hasHeader(string $name, $constraint = null): HasHeaderConstraint
 {
-    return new HasHeaderConstraint($name, $constraint);
+    return Psr7AssertionsClass::hasHeader($name, $constraint);
 }
 
-function hasHeaders(array $constraints): Constraint
+function hasHeaderEqualTo(string $name, string $expected): HasHeaderConstraint
+{
+    return Psr7AssertionsClass::hasHeaderEqualTo($name, $expected);
+}
+
+function hasHeaders(array $constraints): LogicalAnd
 {
     return Psr7AssertionsClass::hasHeaders($constraints);
 }
 
-function hasStatus($status): Constraint
+function hasStatus($status): HasStatusConstraint
 {
     return Psr7AssertionsClass::hasStatus($status);
 }
 
-function hasQueryParameter($name, $value = null): Constraint
+function hasQueryParameter($name, $value = null): HasQueryParameterConstraint
 {
     return Psr7AssertionsClass::hasQueryParameter($name, $value);
 }
 
-function hasQueryParameters(array $constraints): Constraint
+function hasQueryParameters(array $parameters): HasQueryParametersConstraint
 {
-    return Psr7AssertionsClass::hasQueryParameters($constraints);
+    return Psr7AssertionsClass::hasQueryParameters($parameters);
 }
 
-function isSuccess(): Constraint
+function isSuccess(): HasStatusConstraint
 {
     return Psr7AssertionsClass::isSuccess();
 }
 
-function isRedirect(): Constraint
+function isRedirect(): HasStatusConstraint
 {
     return Psr7AssertionsClass::isRedirect();
 }
 
-function isClientError(): Constraint
+function isClientError(): HasStatusConstraint
 {
     return Psr7AssertionsClass::isClientError();
 }
 
-function isServerError(): Constraint
+function isServerError(): HasStatusConstraint
 {
     return Psr7AssertionsClass::isServerError();
 }
 
-function hasContentType(string $contentType): Constraint
+function hasContentType(string $contentType): HasHeaderConstraint
 {
-    return new HasHeaderConstraint(
-        'Content-Type',
-        Assert::matchesRegularExpression(',^' . preg_quote($contentType, '/') . '(;.+)?$,')
-    );
+    return Psr7AssertionsClass::hasContentType($contentType);
 }
 
-function hasMethod(string $method): Constraint
+function hasMethod(string $method): HasMethodConstraint
 {
     return Psr7AssertionsClass::hasMethod($method);
 }
 
-function isGet(): Constraint
+function isGet(): HasMethodConstraint
 {
     return Psr7AssertionsClass::isGet();
 }
 
-function isPost(): Constraint
+function isPost(): HasMethodConstraint
 {
     return Psr7AssertionsClass::isPost();
 }
 
-function isPut(): Constraint
+function isPut(): HasMethodConstraint
 {
     return Psr7AssertionsClass::isPut();
 }
 
-function isDelete(): Constraint
+function isDelete(): HasMethodConstraint
 {
     return Psr7AssertionsClass::isDelete();
 }
 
-function bodyMatches($constraint): Constraint
+function bodyMatches(Constraint $constraint): BodyMatchesConstraint
 {
-    return new BodyMatchesConstraint($constraint);
+    return Psr7AssertionsClass::bodyMatches($constraint);
 }
 
-function bodyMatchesJson($constraints): Constraint
+function bodyMatchesJson(array $constraints): LogicalAnd
 {
-    return Assert::logicalAnd(
-        hasContentType('application/json'),
-        bodyMatches(
-            Assert::logicalAnd(
-                Assert::isJson(),
-                new JsonValueMatchesMany($constraints)
-            )
-        )
-    );
+    return Psr7AssertionsClass::bodyMatchesJson($constraints);
 }
 
-function bodyMatchesForm(array $constraints): Constraint
+function bodyMatchesForm(array $constraints): LogicalAnd
 {
     return Psr7AssertionsClass::bodyMatchesForm($constraints);
 }
 
-function isAbsoluteUri(): Constraint
+function isAbsoluteUri(): IsAbsoluteUriConstraint
 {
-    return new IsAbsoluteUriConstraint();
+    return Psr7AssertionsClass::isAbsoluteUri();
 }

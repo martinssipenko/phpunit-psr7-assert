@@ -142,11 +142,8 @@ assertThat($request, hasHeaders([
 
 ##### `assertMessageBodyMatches($message, $constraint)` / `bodyMatches($constraint)`
 
-Asserts that the message body matches the constraint `$constraint`. If
-`$constraint` is a primitive value, the assertion will pass when the message
-body is equal to the constraint. If `$constraint` is an instance of the
-`PHPUnit\Framework\Constraint\Constraint` class, the constraint will be evaluated
-as-is.
+Asserts that the message body matches the constraint `$constraint`. `$constraint` is an instance of the
+`PHPUnit\Framework\Constraint\Constraint` class.
 
 ##### `assertMessageBodyMatchesJson($message, $jsonConstraints)` / `bodyMatchesJson($jsonConstraints)`
 
